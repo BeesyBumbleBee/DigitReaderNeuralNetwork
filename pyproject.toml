@@ -1,0 +1,18 @@
+[project]
+name = "digitreaderneuralnetwork"
+version = "0.1.0"
+description = "Essential libraries for neural networks"
+authors = [
+    {name = "BeesyBumbleBee",email = "sz.oleskiewicz@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy (>=2.2.2,<3.0.0)",
+    "mnist (>=0.2.2,<0.3.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
