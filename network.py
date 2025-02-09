@@ -52,14 +52,14 @@ class Network(object):
             zvectors.append(z)
             activation = sigmoid(z)
             activations.append(activation)
-        delta = self.cost_derivative(activations[-1], y) * sigmoid_prime(zvectors[-1])
+        delta = np.multiply(self.cost_derivative(activations[-1], y), sigmoid_prime(zvectors[-1]))
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         
         for layer in range(2, self.num_layers):
             z = zvectors[-layer]
             sp = sigmoid_prime(z)
-            delta = np.dot(self.weights[-layer + 1].transpose(), delta) * sp
+            delta = np.multiply(np.dot(self.weights[-layer + 1].transpose(), delta), sp)
             nabla_b[-layer] = delta
             nabla_w[-layer] = np.dot(delta, activations[-layer - 1].transpose())
         return (nabla_b, nabla_w)
@@ -71,9 +71,15 @@ class Network(object):
     def cost_derivative(self, output_activations, y):
         return (output_activations - y)
 
+    def load_network(self, weights, biases):
+        self.biases = biases
+        self.weights = weights
+
+    def get_network(self):
+        return (self.weights, self.biases)
+
 def sigmoid(z):
     return 1.0 / (1.0 + np.exp(-z))
 
 def sigmoid_prime(z):
-    return sigmoid(z).transpose() * (1 - sigmoid(z))
-
+        return np.multiply(sigmoid(z), (1 - sigmoid(z)))

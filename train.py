@@ -1,6 +1,7 @@
 from network import Network
 from mnist_loader import load_data
-from pickle import load, dump
+from _pickle import load, dump
+import gzip
 import argparse
 
 netpath = "./networks/"
@@ -8,26 +9,30 @@ netpath = "./networks/"
 def main():
     args = parser.parse_args()
     training_data, test_data = load_data()
-    netName = args.learning_rate
-    net = load_network(netName)
-    if net is None:
-        net = Network([784, 30, 10])
+    netName = args.network_name
+    net = Network([784, 30, 10])
+    net = load_network(netName, net)
+    if args.testing is False:
+        test_data = None
 
-    net.SGD(training_data, args.epochs, args.batch_size, args.learning_rate, test_data=(test_data if args.testing else None))
+    net.SGD(training_data, args.epochs, args.batch_size, args.learning_rate, test_data=test_data)
     save_network(netName, net)
 
 
-def load_network(name: str) -> Network | None:
+def load_network(name: str, net: Network) -> Network:
     try:
-        with open(f"{netpath}/{name}", "rb") as file:
-            network = load(file)
+        fp = gzip.open(f"{netpath}/{name}.pkl.gz", "rb")
+        weights, biases = load(fp)
+        fp.close()
+        net.load_network(weights, biases)
     except FileNotFoundError:
-        return None
-    return network
+        pass
+    return net
 
 def save_network(name: str, network: Network):
-    with open(f"{netpath}/{name}", "wb") as file:
-        dump(network, file)
+    fp = gzip.open(f"{netpath}/{name}.pkl.gz", "wb")
+    dump(network.get_network(), fp)
+    fp.close()
 
 
 if __name__ == "__main__":
