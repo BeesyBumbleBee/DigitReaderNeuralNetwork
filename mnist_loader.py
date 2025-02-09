@@ -1,4 +1,6 @@
 import numpy as np
+import _pickle
+import gzip
 
 class Labels:
     def __init__(self, filename):
@@ -61,9 +63,28 @@ datasets = {
 }
 datasets_url = 'http://yann.lecun.com/exdb/mnist/'
 
-def load_data():
+def pickle_data():
+    # TODO: right now all datasets are stored locally, add downloading from a mirror site
     training_data = [(datasets['train-images'].get_image(x), vectorize_result(datasets['train-labels'].get_label(x))) for x in range(datasets['train-images'].number_of_items)]
     test_data = [(datasets['test-images'].get_image(x), datasets['test-labels'].get_label(x)) for x in range(datasets['test-images'].number_of_items)]
+    fp = gzip.open(f"{datapath}/mnist_dataset.pkl.gz", "wb")
+    _pickle.dump((training_data, test_data), fp)
+    fp.close()
+
+def unpickle_data():
+    try:
+        fp = gzip.open(f"{datapath}/mnist_dataset.pkl.gz", "rb")
+        training_data, test_data = _pickle.load(fp)
+        fp.close()
+    except FileNotFoundError:
+        pickle_data()
+        fp = gzip.open(f"{datapath}/mnist_dataset.pkl.gz", "rb")
+        training_data, test_data = _pickle.load(fp)
+        fp.close()
+    return (training_data, test_data)
+
+def load_data():
+    training_data, test_data = unpickle_data()
     return (training_data, test_data)
 
 def vectorize_result(j):
