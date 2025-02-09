@@ -6,14 +6,14 @@ import argparse
 netpath = "./networks/"
 
 def main():
-    args = parser.parse_args(['--network-name', 'name', '--batch-size', 'batch', '--learning-rate', 'eta', '--epochs', 'epochs'])
+    args = parser.parse_args()
     training_data, test_data = load_data()
-    netName = args.name
+    netName = args.learning_rate
     net = load_network(netName)
     if net is None:
         net = Network([784, 30, 10])
 
-    net.SGD(training_data, args.epochs, args.batch, args.eta, test_data=test_data if args.testing else None)
+    net.SGD(training_data, args.epochs, args.batch_size, args.learning_rate, test_data=(test_data if args.testing else None))
     save_network(netName, net)
 
 
@@ -32,9 +32,9 @@ def save_network(name: str, network: Network):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--epochs", default=30)
-    parser.add_argument("-r", "--learning-rate", default=1)
-    parser.add_argument("-b", "--batch-size", default=10)
+    parser.add_argument("-e", "--epochs", default=30, type=int)
+    parser.add_argument("-r", "--learning-rate", default=1.0, type=float)
+    parser.add_argument("-b", "--batch-size", default=10, type=int)
     parser.add_argument("-n", "--network-name", default="digitreader")
     parser.add_argument("-t", "--testing", action="store_false")
     main()
