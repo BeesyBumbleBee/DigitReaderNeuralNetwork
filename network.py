@@ -15,6 +15,7 @@ class Network(object):
         return a
 
     def SGD(self, training_data, epochs, mini_batch_size, eta, test_data=None):
+        self.batch_size = mini_batch_size
         n_test = 0
         if test_data:
             n_test = len(test_data)
@@ -22,7 +23,17 @@ class Network(object):
 
         for j in range(epochs):
             random.shuffle(training_data)
-            mini_batches = [training_data[k:k+mini_batch_size] for k in range(0, n, mini_batch_size)]
+            mini_batches = []
+            inputs = training_data[0][0]
+            outputs = training_data[0][1]
+            for i in range(1, n):
+                if i % mini_batch_size == 0:
+                    mini_batches.append((inputs, outputs))
+                    inputs = training_data[i][0]
+                    outputs = training_data[i][1]
+                else:
+                    inputs = np.concatenate((inputs, training_data[i][0]), axis=1)
+                    outputs = np.concatenate((outputs, training_data[i][1]), axis=1)
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data:
@@ -31,12 +42,7 @@ class Network(object):
                 print("Epoch {0:4d} complete".format(j))
 
     def update_mini_batch(self, mini_batch, eta):
-        nabla_b = [np.zeros(b.shape) for b in self.biases]
-        nabla_w = [np.zeros(w.shape) for w in self.weights]
-        for x, y in mini_batch:
-            delta_nabla_b, delta_nabla_w = self.backpropagate(x, y)
-            nabla_b = [nb + dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
-            nabla_w = [nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
+        nabla_b, nabla_w = self.backpropagate(mini_batch[0], mini_batch[1])
         self.weights = [w - (eta / len(mini_batch)) * nw for w, nw in zip(self.weights, nabla_w)]
         self.biases = [b - (eta / len(mini_batch)) * nb for b, nb in zip(self.biases, nabla_b)]
 
@@ -48,6 +54,7 @@ class Network(object):
         activations = [x]
         zvectors = []
         for b, w in zip(self.biases, self.weights):
+            b = np.repeat(b, self.batch_size, axis=1)
             z = np.dot(w, activation) + b
             zvectors.append(z)
             activation = sigmoid(z)
@@ -62,6 +69,8 @@ class Network(object):
             delta = np.multiply(np.dot(self.weights[-layer + 1].transpose(), delta), sp)
             nabla_b[-layer] = delta
             nabla_w[-layer] = np.dot(delta, activations[-layer - 1].transpose())
+        for i, layer in enumerate(nabla_b):
+            nabla_b[i] = np.sum(layer, axis=1)
         return (nabla_b, nabla_w)
     
     def evaluate(self, test_data):
