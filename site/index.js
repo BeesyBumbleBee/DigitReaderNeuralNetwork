@@ -2,12 +2,15 @@ const canvas = document.getElementById('drawing-board');
 const toolbar = document.getElementById('toolbar');
 const ctx = canvas.getContext('2d');
 
+ctx.fillStyle = "white";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
 const canvasOffsetX = canvas.offsetLeft;
 const canvasOffsetY = canvas.offsetTop;
 
 let results = []
 for (const i of ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']) {
-    results.push(document.getElementById('res'+i));
+    results.push([document.getElementById('bar'+i), document.getElementById('res'+i)]);
 }
 
 let isPainting = false;
@@ -42,14 +45,15 @@ const feed = async(input) => {
     }
     console.log(output);
     for (i in output._data) {
-        let bar = "";
+        let bar = " ";
         let out = output._data[i] * 100;
         for (let j = 0; j <= 100; j+= 5) {
             if (out >= 5) bar += "█";
             else bar += " ";
             out -= 5;
         }
-        results[i].innerHTML = i+': ' + bar + Math.round(output._data[i]*10000) / 100 + '%';
+        results[i][0].innerHTML = bar;
+        results[i][1].innerHTML = Math.round(output._data[i]*10000) / 100 + '%';
     }
     return output;
 }
@@ -61,13 +65,13 @@ const eval = () => {
         let countY = 0;
         let temp = 0;
         for (i in screen.data) {
-            if (i % 4 != 3) continue;
+            if (i % 4 != 0) continue;
             if (countX % 28 == 0 && countY % 28 == 0) data.push([]);
             if (countX == 784) {
                 countX = 0;
                 countY += 1;
             }
-            data[Math.floor(countX/28) + 28 * Math.floor(countY/28)].push(screen.data[i]);
+            data[Math.floor(countX/28) + 28 * Math.floor(countY/28)].push(255 - screen.data[i]);
             countX += 1;
             temp += 1;
         }
@@ -89,13 +93,13 @@ const saveJson = () => {
         let countY = 0;
         let temp = 0;
         for (i in screen.data) {
-            if (i % 4 != 3) continue;
+            if (i % 4 != 0) continue;
             if (countX % 28 == 0 && countY % 28 == 0) data.push([]);
             if (countX == 784) {
                 countX = 0;
                 countY += 1;
             }
-            data[Math.floor(countX/28) + 28 * Math.floor(countY/28)].push(screen.data[i]);
+            data[Math.floor(countX/28) + 28 * Math.floor(countY/28)].push(255 - screen.data[i]);
             countX += 1;
             temp += 1;
         }
@@ -130,9 +134,11 @@ const saveJson = () => {
 
 toolbar.addEventListener('click', e => {
     if (e.target.id === 'clear') {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         for (i in results) {
-            results[i].innerHTML = i+': ';
+            results[i][0].innerHTML = ' ';
+            results[i][1].innerHTML = '0%';
         }
     } else if (e.target.id === 'save') {
         saveJson();
