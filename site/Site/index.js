@@ -79,9 +79,54 @@ const eval = () => {
             data[i] = [Math.round(avg)];
         }
         data.pop(); // temporary bc idk why there is 785 elements and not 784
-        console.log(data);
         feed(data);
 }
+
+const saveJson = () => {
+        let screen = ctx.getImageData(0, 0, 784, 784);
+        let data = [];
+        let countX = 0;
+        let countY = 0;
+        let temp = 0;
+        for (i in screen.data) {
+            if (i % 4 != 3) continue;
+            if (countX % 28 == 0 && countY % 28 == 0) data.push([]);
+            if (countX == 784) {
+                countX = 0;
+                countY += 1;
+            }
+            data[Math.floor(countX/28) + 28 * Math.floor(countY/28)].push(screen.data[i]);
+            countX += 1;
+            temp += 1;
+        }
+        for (i in data) {
+            avg = 0;
+            for (j in data[i]) {
+                avg += data[i][j] / 784;
+            }
+            data[i] = [Math.round(avg)];
+        }
+        data.pop(); // temporary bc idk why there is 785 elements and not 784
+    
+        let jsonData = "{ \"values\": ["
+        for (i in data) {
+            jsonData += "[" + data[i] + "]";
+            if (i != data.length - 1) jsonData += ',';
+        }
+        jsonData += "]}";
+        console.log(jsonData);
+        const name = "data.json";
+        const type = "text/plain";
+
+        const a = document.createElement("a");
+        const file = new Blob([jsonData], {type: type});
+        a.href = URL.createObjectURL(file);
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+}
+
 
 toolbar.addEventListener('click', e => {
     if (e.target.id === 'clear') {
@@ -89,6 +134,8 @@ toolbar.addEventListener('click', e => {
         for (i in results) {
             results[i].innerHTML = i+': ';
         }
+    } else if (e.target.id === 'save') {
+        saveJson();
     }
 });
 

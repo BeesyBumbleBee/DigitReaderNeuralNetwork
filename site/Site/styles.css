@@ -28,8 +28,10 @@ h1 {
 
 #toolbar {
     display: flex;
+    position: relative;
     flex-direction: column;
     padding: 5px;
+    height: 776px;
     width: 700px;
     background-color: #202020;
 }
@@ -47,9 +49,19 @@ h1 {
 }
 
 #toolbar button {
+    position: absolute;
+    top: 86%;
+    left: 25%;
+    width: 50%;
     background-color: #1565c0;
     border: none;
     border-radius: 4px;
     color:white;
     padding: 2px;
+}
+
+#toolbar #save {
+    position: absolute;
+    top: 90%;
+    width: 50%;
 }
