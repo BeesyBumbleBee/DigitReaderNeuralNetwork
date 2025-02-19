@@ -1,13 +1,3 @@
-const canvas = document.getElementById('drawing-board');
-const toolbar = document.getElementById('toolbar');
-const ctx = canvas.getContext('2d');
-
-ctx.fillStyle = "white";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-const canvasOffsetX = canvas.offsetLeft;
-const canvasOffsetY = canvas.offsetTop;
-
 let results = []
 for (const i of ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']) {
     results.push([document.getElementById('bar'+i), document.getElementById('res'+i)]);
@@ -59,80 +49,86 @@ const feed = async(input) => {
 }
 
 const eval = () => {
-        let screen = ctx.getImageData(0, 0, 784, 784);
-        let data = [];
-        let countX = 0;
-        let countY = 0;
-        let temp = 0;
-        for (i in screen.data) {
-            if (i % 4 != 0) continue;
-            if (countX % 28 == 0 && countY % 28 == 0) data.push([]);
-            if (countX == 784) {
-                countX = 0;
-                countY += 1;
-            }
-            data[Math.floor(countX/28) + 28 * Math.floor(countY/28)].push(255 - screen.data[i]);
-            countX += 1;
-            temp += 1;
+    const canvas = document.getElementById('drawing-board');
+    const ctx = canvas.getContext('2d');
+    let screen = ctx.getImageData(0, 0, 784, 784);
+    let data = [];
+    let countX = 0;
+    let countY = 0;
+    let temp = 0;
+    for (i in screen.data) {
+        if (i % 4 != 0) continue;
+        if (countX % 28 == 0 && countY % 28 == 0) data.push([]);
+        if (countX == 784) {
+            countX = 0;
+            countY += 1;
         }
-        for (i in data) {
-            avg = 0;
-            for (j in data[i]) {
-                avg += data[i][j] / 784;
-            }
-            data[i] = [Math.round(avg)];
+        data[Math.floor(countX/28) + 28 * Math.floor(countY/28)].push(255 - screen.data[i]);
+        countX += 1;
+        temp += 1;
+    }
+    for (i in data) {
+        avg = 0;
+        for (j in data[i]) {
+            avg += data[i][j] / 784;
         }
-        data.pop(); // temporary bc idk why there is 785 elements and not 784
-        feed(data);
+        data[i] = [Math.round(avg)];
+    }
+    data.pop(); // temporary bc idk why there is 785 elements and not 784
+    feed(data);
 }
 
 const saveJson = () => {
-        let screen = ctx.getImageData(0, 0, 784, 784);
-        let data = [];
-        let countX = 0;
-        let countY = 0;
-        let temp = 0;
-        for (i in screen.data) {
-            if (i % 4 != 0) continue;
-            if (countX % 28 == 0 && countY % 28 == 0) data.push([]);
-            if (countX == 784) {
-                countX = 0;
-                countY += 1;
-            }
-            data[Math.floor(countX/28) + 28 * Math.floor(countY/28)].push(255 - screen.data[i]);
-            countX += 1;
-            temp += 1;
+    let screen = ctx.getImageData(0, 0, 784, 784);
+    let data = [];
+    let countX = 0;
+    let countY = 0;
+    let temp = 0;
+    for (i in screen.data) {
+        if (i % 4 != 0) continue;
+        if (countX % 28 == 0 && countY % 28 == 0) data.push([]);
+        if (countX == 784) {
+            countX = 0;
+            countY += 1;
         }
-        for (i in data) {
-            avg = 0;
-            for (j in data[i]) {
-                avg += data[i][j] / 784;
-            }
-            data[i] = [Math.round(avg)];
+        data[Math.floor(countX/28) + 28 * Math.floor(countY/28)].push(255 - screen.data[i]);
+        countX += 1;
+        temp += 1;
+    }
+    for (i in data) {
+        avg = 0;
+        for (j in data[i]) {
+            avg += data[i][j] / 784;
         }
-        data.pop(); // temporary bc idk why there is 785 elements and not 784
-    
-        let jsonData = "{ \"values\": ["
-        for (i in data) {
-            jsonData += "[" + data[i] + "]";
-            if (i != data.length - 1) jsonData += ',';
-        }
-        jsonData += "]}";
-        console.log(jsonData);
-        const name = "data.json";
-        const type = "text/plain";
+        data[i] = [Math.round(avg)];
+    }
+    data.pop(); // temporary bc idk why there is 785 elements and not 784
 
-        const a = document.createElement("a");
-        const file = new Blob([jsonData], {type: type});
-        a.href = URL.createObjectURL(file);
-        a.download = name;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+    let jsonData = "{ \"values\": ["
+    for (i in data) {
+        jsonData += "[" + data[i] + "]";
+        if (i != data.length - 1) jsonData += ',';
+    }
+    jsonData += "]}";
+    console.log(jsonData);
+    const name = "data.json";
+    const type = "text/plain";
+
+    const a = document.createElement("a");
+    const file = new Blob([jsonData], {type: type});
+    a.href = URL.createObjectURL(file);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
 }
 
 
+const toolbar = document.getElementById('toolbar');
+
 toolbar.addEventListener('click', e => {
+    const canvas = document.getElementById('drawing-board');
+    const ctx = canvas.getContext('2d');
     if (e.target.id === 'clear') {
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -145,38 +141,19 @@ toolbar.addEventListener('click', e => {
     }
 });
 
-toolbar.addEventListener('change', e => {
-    if(e.target.id === 'stroke') {
-        ctx.strokeStyle = e.target.value;
-    }
-
-    if(e.target.id === 'lineWidth') {
-        lineWidth = e.target.value;
-    }
-    
-});
-
-const draw = (e) => {
-    if(!isPainting) {
-        return;
-    }
-
-    ctx.lineWidth = lineWidth;
-    ctx.lineCap = 'round';
-
-    ctx.lineTo(e.clientX - canvasOffsetX, e.clientY);
-    ctx.stroke();
-}
-
 let evalTime;
-canvas.addEventListener('mousedown', (e) => {
+const el = document.getElementById('drawing-board');
+
+el.addEventListener('mousedown', (e) => {
     evalTime = window.setInterval(eval, 2000);
     isPainting = true;
     startX = e.clientX;
     startY = e.clientY;
 });
 
-canvas.addEventListener('mouseup', e => {
+el.addEventListener('mouseup', (e) => {
+    const canvas = document.getElementById('drawing-board');
+    const ctx = canvas.getContext('2d');
     isPainting = false;
     ctx.stroke();
     ctx.beginPath();
@@ -184,5 +161,108 @@ canvas.addEventListener('mouseup', e => {
     eval();
 });
 
-canvas.addEventListener('mousemove', draw);
+el.addEventListener('mousemove', (e) =>{
+    const canvas = document.getElementById('drawing-board');
+    const ctx = canvas.getContext('2d');
+    if(!isPainting) {
+        return;
+    }
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'round';
+    ctx.lineTo(e.clientX - canvas.offsetLeft, e.clientY);
+    ctx.stroke();
+
+});
+
+const ongoingTouches = [];
+
+function copyTouch({ identifier, pageX, pageY }) {
+  return { identifier, pageX, pageY };
+}
+
+const ongoingTouchIndexById = (idToFind) => {
+  for (let i = 0; i < ongoingTouches.length; i++) {
+    const id = ongoingTouches[i].identifier;
+
+    if (id === idToFind) {
+      return i;
+    }
+  }
+  return -1; // not found
+}
+
+el.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    evalTime = window.setInterval(eval, 2000);
+    const canvas = document.getElementById('drawing-board');
+    const ctx = canvas.getContext('2d');
+    const touches = e.changedTouches;
+    
+    for (let i = 0; i < touches.length; i++) {
+        ongoingTouches.push(copyTouch(touches[i]));
+        ctx.beginPath();
+        console.log(ongoingTouches);
+    }
+});
+
+el.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const canvas = document.getElementById('drawing-board');
+    const ctx = canvas.getContext('2d');
+    const touches = e.changedTouches;
+
+    for (let i = 0; i < touches.length; i++) {
+        const idx = ongoingTouchIndexById(touches[i].identifier);
+        if (idx >= 0) {
+            ctx.beginPath();
+            ctx.moveTo(ongoingTouches[idx].pageX, ongoingTouches[idx].pageY);
+            ctx.lineTo(touches[i].pageX, touches[i].pageY);
+            ctx.lineWidth = lineWidth;
+            ctx.strokeStyle = "black";
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            ongoingTouches.splice(idx, 1, copyTouch(touches[i]));
+        }
+    }
+});
+
+el.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    clearInterval(evalTime);
+    const canvas = document.getElementById('drawing-board');
+    const ctx = canvas.getContext('2d');
+    const touches = e.changedTouches;
+
+    for (let i = 0; i < touches.length; i++) {
+        let idx = ongoingTouchIndexById(touches[i].identifier);
+        if (idx >= 0) {
+            ctx.lineWidth = lineWidth;
+            ctx.beginPath();
+            ctx.moveTo(ongoingTouches[idx].pageX, ongoingTouches[idx].pageY);
+            ctx.lineTo(touches[i].pageX, touches[i].pageY);
+            ongoingTouches.splice(idx, 1);
+        }
+    }
+    eval();
+});
+
+el.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    const canvas = document.getElementById('drawing-board');
+    const ctx = canvas.getContext('2d');
+    const touches = e.changedTouches;
+
+    for (let i = 0; i < touches.length; i++) {
+        let idx = ongoingTouchIndexById(touches[i].identifier);
+        ongoingTouches.splice(idx, 1);
+    }
+});
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const canvas = document.getElementById('drawing-board');
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+});
 
