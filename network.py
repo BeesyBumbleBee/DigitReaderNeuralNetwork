@@ -1,3 +1,4 @@
+import warnings
 import random
 import numpy as np
 import json
@@ -230,14 +231,22 @@ def load_network(filename, layers) -> Network:
         pass
     return net
 
+def nowarning(func):
+    def wrapper(*args, **kwargs):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return func(*args, **kwargs)
+    return wrapper
 
+@nowarning
 def sigmoid(z):
     return 1.0 / (1.0 + np.exp(-z))
 
 def sigmoid_prime(z):
-        return np.multiply(sigmoid(z), (1 - sigmoid(z)))
+    return np.multiply(sigmoid(z), (1 - sigmoid(z)))
 
 def vectorized_result(j):
     e = np.zeros((10, 1))
     e[j] = 1.0
     return e
+
