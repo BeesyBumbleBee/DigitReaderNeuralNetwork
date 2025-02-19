@@ -29,6 +29,8 @@ class CrossEntropyCost(object):
 class Network(object):
 
     def __init__(self, sizes, cost=CrossEntropyCost):
+        self.cost_history = []
+        self.acc_history = []
         self.num_layers = len(sizes)
         self.layers = sizes
         self.sizes = sizes
@@ -47,27 +49,32 @@ class Network(object):
     def SGD(self, training_data, epochs, mini_batch_size, eta,
             lmbda=0.0,
             evaluation_data=None,
+            train_hyper_param=False,
             monitor_eval_cost=False,
             monitor_eval_acc=False,
             monitor_train_cost=False,
             monitor_train_acc=False):
         self.batch_size = mini_batch_size
+        self.eta = eta
+        self.lmbda = lmbda
+        if train_hyper_param:
+            self.init_hyper_param_training()
         n_eval = 0
         if evaluation_data:
             n_eval = len(evaluation_data)
         n = len(training_data)
 
-        eval_cost, eval_acc = [], []
         train_cost, train_acc = [], []
-        for j in range(epochs):
-            
+        for j in range(epochs*10):
+            print(f"eta={self.eta}, lmbda={self.lmbda}, batch_size={self.batch_size}")
+
             random.shuffle(training_data)
             mini_batches = []
             inputs = training_data[0][0]
             outputs = training_data[0][1]
 
             for i in range(1, n):
-                if i % mini_batch_size == 0:
+                if i % self.batch_size == 0:
                     mini_batches.append((inputs, outputs))
                     inputs = training_data[i][0]
                     outputs = training_data[i][1]
@@ -76,27 +83,31 @@ class Network(object):
                     outputs = np.concatenate((outputs, training_data[i][1]), axis=1)
             
             for mini_batch in mini_batches:
-                self.update_mini_batch(mini_batch, eta, lmbda, len(training_data))
+                self.update_mini_batch(mini_batch, self.eta, self.lmbda, len(training_data))
             print("\nEpoch {0:4d} complete".format(j))
             
             if monitor_train_cost:
-                cost = self.total_cost(training_data, lmbda)
+                cost = self.total_cost(training_data, self.lmbda)
                 train_cost.append(cost)
                 print("Cost on training data:       {:4.5f}".format(cost))
             if monitor_train_acc:
                 acc = self.accuracy(training_data, y_vector=True)
+                print("Accuracy on training data:   {:8d} ({:+4d}) / {:8d}".format(acc, acc - max(train_acc) if len(train_acc) != 0 else 0, n))
                 train_acc.append(acc)
-                print("Accuracy on training data:   {:8d} / {:8d}".format(acc, n))
-            if monitor_eval_cost:
-                cost = self.total_cost(evaluation_data, lmbda, y_vector=True)
-                eval_cost.append(cost)
+            if monitor_eval_cost or train_hyper_param:
+                cost = self.total_cost(evaluation_data, self.lmbda, y_vector=True)
+                self.cost_history.append(cost)
                 print("Cost on evaluation data:     {:4.5f}".format(cost))
-            if monitor_eval_acc:
+            if monitor_eval_acc or train_hyper_param:
                 acc = self.accuracy(evaluation_data)
-                eval_acc.append(acc)
-                print("Accuracy on evaluation data: {:8d} / {:8d}".format(acc, n_eval))
+                print("Accuracy on evaluation data: {:8d} ({:+4d}) / {:8d}".format(acc, acc - max(self.acc_history) if len(self.acc_history) != 0 else 0, n_eval))
+                self.acc_history.append(acc)
 
-        return eval_cost, eval_acc, train_cost, train_acc
+            if train_hyper_param:
+                if self.train_hyper_parameters(j, n_eval):
+                    break
+
+        return self.acc_history, self.cost_history, train_cost, train_acc
 
 
 
@@ -133,6 +144,36 @@ class Network(object):
         for i, layer in enumerate(nabla_b):
             nabla_b[i] = np.sum(layer, axis=1)
         return (nabla_b, nabla_w)
+
+    def init_hyper_param_training(self):
+        self.count = 0
+        self.best_in = 10
+        self.best_acc = 0
+        self.eta = 0.001
+        self.lmbda = 0.01
+        self.batch_size = 10
+
+    def train_hyper_parameters(self, epoch, n_eval):
+        if epoch > 1 and self.acc_history[-2] - self.acc_history[-1] > 0.001 * n_eval:
+            print(f"Lowered eta from {self.eta} to ", end='')
+            self.eta /= 2
+            print(self.eta)
+            self.changed_eta = True
+            return False
+
+        if self.best_acc < self.acc_history[-1]:
+            self.count = 0
+            self.best_acc = self.acc_history[-1]
+        else:
+            self.count += 1
+        if self.count == self.best_in / 2:
+            self.lmbda /= 2
+            self.batch_size = round(self.batch_size / 2, 0) 
+        if self.count == self.best_in:
+            return True
+
+        return False
+        
     
     def evaluate(self, test_data):
         test_results = [(np.argmax(self.feedforward(x)), y) for (x, y) in test_data]

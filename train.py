@@ -1,7 +1,5 @@
-from network import Network, load_network
+from network import load_network
 from mnist_loader import load_data
-from _pickle import load, dump
-import gzip
 import argparse
 
 netpath = "./networks"
@@ -20,6 +18,7 @@ def main():
         print(f"Training network. Layers: {net.layers}")
 
     net.SGD(training_data, args.epochs, args.batch_size, args.learning_rate,
+            train_hyper_param=args.auto_hyper,
             lmbda=args.regularization,
             evaluation_data=test_data,
             monitor_eval_acc=args.eval_acc,
@@ -31,8 +30,9 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("-A", "--auto-hyper", action="store_true")
     parser.add_argument("-e", "--epochs", default=30, type=int)
-    parser.add_argument("-r", "--learning-rate", default=1.0, type=float)
+    parser.add_argument("-r", "--learning-rate", default=0.01, type=float)
     parser.add_argument("-R", "--regularization", default=0.0, type=float)
     parser.add_argument("-b", "--batch-size", default=10, type=int)
     parser.add_argument("-n", "--network-name", default="digitreader")
