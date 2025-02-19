@@ -2,3 +2,4 @@ dataset/*
 networks/*
 resources*
 __pycache__/*
+*/main
