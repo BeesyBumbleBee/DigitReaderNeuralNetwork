@@ -2,4 +2,6 @@ dataset/*
 networks/*
 resources*
 __pycache__/*
-*/main
+site/main.go
+site/main
+site/go.mod
