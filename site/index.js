@@ -141,11 +141,9 @@ toolbar.addEventListener('click', e => {
     }
 });
 
-let evalTime;
 const el = document.getElementById('drawing-board');
 
 el.addEventListener('mousedown', (e) => {
-    evalTime = window.setInterval(eval, 2000);
     isPainting = true;
     startX = e.clientX;
     startY = e.clientY;
@@ -157,7 +155,6 @@ el.addEventListener('mouseup', (e) => {
     isPainting = false;
     ctx.stroke();
     ctx.beginPath();
-    clearInterval(evalTime);
     eval();
 });
 
@@ -193,7 +190,6 @@ const ongoingTouchIndexById = (idToFind) => {
 
 el.addEventListener('touchstart', (e) => {
     e.preventDefault();
-    evalTime = window.setInterval(eval, 2000);
     const canvas = document.getElementById('drawing-board');
     const ctx = canvas.getContext('2d');
     const touches = e.changedTouches;
@@ -228,7 +224,6 @@ el.addEventListener('touchmove', (e) => {
 
 el.addEventListener('touchend', (e) => {
     e.preventDefault();
-    clearInterval(evalTime);
     const canvas = document.getElementById('drawing-board');
     const ctx = canvas.getContext('2d');
     const touches = e.changedTouches;
